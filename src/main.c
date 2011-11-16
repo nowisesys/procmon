@@ -214,6 +214,7 @@ static void pmon_run(struct proc_limit *lim)
 			printf("Running in interactive mode (undetached). Press Ctrl+C to exit.\n");
 		}
 		openlog(lim->prog, LOG_PID, LOG_DAEMON);
+		
 		snprintf(lim->pidbuff, sizeof(lim->pidbuff), "%d\n", getpid());
 		if ((fd = open(lim->pidfile, O_CREAT | O_EXCL | O_WRONLY, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)) < 0) {
 			error("Failed open %s (%s)", lim->pidfile, strerror(errno));
@@ -225,6 +226,7 @@ static void pmon_run(struct proc_limit *lim)
 		} else {
 			close(fd);
 		}
+		
 		sigfillset(&lim->sigset);
 		sigdelset(&lim->sigset, SIGKILL);
 		sigdelset(&lim->sigset, SIGTERM);
@@ -235,16 +237,18 @@ static void pmon_run(struct proc_limit *lim)
 		signal(SIGTERM, sigterm);
 		signal(SIGINT, sigint);
 		signal(SIGHUP, sighup);
+		
 		if (!lim->fgmode) {
 			info("Daemon starting up... (%s)", PACKAGE_STRING);
 		}
+		
 		while (!done) {
 			struct timeval tv;
 			tv.tv_sec = lim->interval;
 			tv.tv_usec = 0;
 			if (select(0, NULL, NULL, NULL, &tv) < 0) {
 				if (!done) { /* watchout for interupted syscall */
-					error("Calling select failed: %s", strerror(errno));
+					error("Failed call select: %s", strerror(errno));
 					continue;
 				} else {
 					break;
@@ -255,6 +259,7 @@ static void pmon_run(struct proc_limit *lim)
 				done = 1;
 			}
 		}
+		
 		if (!lim->fgmode) {
 			info("Daemon exiting (%s)", PACKAGE_STRING);
 		}
