@@ -9,6 +9,7 @@ AC_CONFIG_HEADERS([config.h])
 
 # Checks for programs.
 AC_PROG_CC
+AC_PROG_LN_S
 
 # Checks for libraries.
 AC_CHECK_LIB([proc],[readproc])
