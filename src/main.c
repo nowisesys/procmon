@@ -107,12 +107,12 @@ static void parse_options(int argc, char **argv, const char *prog, struct proc_l
 		{ "foreground", 0, NULL, 'f'},
 		{ "help", 0, NULL, 'h'},
 		{ "interval", 1, NULL, 'i'},
-		{ "dry-run", 0, NULL, 'm' },
+		{ "dry-run", 0, NULL, 'm'},
 		{ "limit", 1, NULL, 'n'},
 		{ "signal", 1, NULL, 's'},
 		{ "verbose", 0, NULL, 'v'},
 		{ "version", 0, NULL, 'V'},
-		{ "script", 1, NULL, 'x' },
+		{ "script", 1, NULL, 'x'},
 		{ "fuzzy", 0, NULL, 'z'}
 	};
 	int c, index;
@@ -120,12 +120,12 @@ static void parse_options(int argc, char **argv, const char *prog, struct proc_l
 
 	lim->prog = prog;
 	lim->self = argv[0];
-	
+
 	lim->nsexec = PMON_DEFAULT_NSEXEC;
 	lim->interval = PMON_TIMEOUT_INTERVAL;
 	lim->signal = PMON_DEFAULT_SIGNAL;
 	lim->ticks = sysconf(_SC_CLK_TCK);
-	
+
 	while ((c = getopt_long(argc, argv, "bc:dfhi:mn:s:vVx:z", lopts, &index)) != -1) {
 		switch (c) {
 		case 'b':
@@ -180,6 +180,9 @@ static void parse_options(int argc, char **argv, const char *prog, struct proc_l
 	if (lim->fuzzy) {
 		lim->cmdline = 1;
 	}
+	if (strcmp(lim->prog, "procmond") == 0) {
+		lim->daemon = 1;
+	}
 }
 
 int main(int argc, char** argv)
@@ -213,6 +216,9 @@ int main(int argc, char** argv)
 		signal(SIGTERM, sigterm);
 		signal(SIGINT, sigint);
 		signal(SIGHUP, sighup);
+		if (!lim.fgmode) {
+			syslog(LOG_INFO, "Daemon starting up... (%s)", PACKAGE_STRING);
+		}
 		while (!done) {
 			struct timeval tv;
 			tv.tv_sec = lim.interval;
@@ -229,6 +235,9 @@ int main(int argc, char** argv)
 				syslog(LOG_ERR, "Error in process scanner");
 				done = 1;
 			}
+		}
+		if (!lim.fgmode) {
+			syslog(LOG_INFO, "Daemon exiting (%s)", PACKAGE_STRING);
 		}
 		closelog();
 		return res == 0 ? 0 : 1;
