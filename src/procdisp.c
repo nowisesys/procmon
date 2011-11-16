@@ -55,6 +55,7 @@ void pmon_dump(const struct proc_limit *lim)
 	debug(1, "   Poll interval: %d\t[interval] (seconds)", lim->interval);
 	debug(1, "          Signal: %d (%s)\t[signal]", lim->signal, strsignal(lim->signal));
 	debug(1, "Ticks per second: %d\t[ticks] (sysconf)", lim->ticks);
+	debug(1, "         Dry-run: %s\t[dryrun]", pmon_bool(lim->dryrun));
 }
 
 void pmon_disp(const struct proc_limit *lim, proc_t *pinf)

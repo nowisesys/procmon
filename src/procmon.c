@@ -162,6 +162,9 @@ static int pmon_check(struct proc_limit *lim, proc_t *pinf)
 			pinf->tid, pinf->cmd, lim->nsexec, lim->nscurr);
 		notice("Sending signal %d (%s) to process %d.",
 			lim->signal, strsignal(lim->signal), pinf->tid);
+		if (lim->dryrun) {
+			return 0; /* be done here! */
+		}
 		if (kill(pinf->tid, lim->signal) < 0) {
 			error("Failed send signal %d to process %d (%s)",
 				lim->signal, pinf->tid, strerror(errno));

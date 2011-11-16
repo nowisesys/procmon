@@ -60,7 +60,8 @@ extern "C" {
                 int flags; /* openproc flags */
                 int ticks; /* clock ticks per second */
                 int fuzzy; /* fuzzy match command name */
-                sigset_t sigset;
+                sigset_t sigset; /* signal proc mask */
+                int dryrun; /* only monitor and report */
         };
 
         /*

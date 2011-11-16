@@ -57,6 +57,7 @@ static void usage(const char *prog, const struct proc_limit *lim)
 	printf("  --interval=sec,-i: Poll interval (%d sec).\n", lim->interval);
 	printf("  --foreground,-f:   Don't detach from controlling terminal.\n");
 	printf("  --fuzzy,-z:        Enable fuzzy match of command name.\n");
+	printf("  --dry-run,-m:      Don't kill processes, only monitor and report.\n");
 	printf("  --debug,-d:        Enable debug.\n");
 	printf("  --verbose,-v:      Be more verbose.\n");
 	printf("  --help,-h:         This help.\n");
@@ -103,6 +104,7 @@ static void parse_options(int argc, char **argv, const char *prog, struct proc_l
 		{ "foreground", 0, NULL, 'f'},
 		{ "help", 0, NULL, 'h'},
 		{ "interval", 1, NULL, 'i'},
+		{ "dry-run", 0, NULL, 'm' },
 		{ "limit", 1, NULL, 'n'},
 		{ "signal", 1, NULL, 's'},
 		{ "verbose", 0, NULL, 'v'},
@@ -120,7 +122,7 @@ static void parse_options(int argc, char **argv, const char *prog, struct proc_l
 	lim->signal = PMON_DEFAULT_SIGNAL;
 	lim->ticks = sysconf(_SC_CLK_TCK);
 	
-	while ((c = getopt_long(argc, argv, "bc:dfhi:n:s:vVz", lopts, &index)) != -1) {
+	while ((c = getopt_long(argc, argv, "bc:dfhi:mn:s:vVz", lopts, &index)) != -1) {
 		switch (c) {
 		case 'b':
 			lim->daemon = 1;
@@ -139,6 +141,9 @@ static void parse_options(int argc, char **argv, const char *prog, struct proc_l
 			exit(0);
 		case 'i':
 			lim->interval = atoi(optarg);
+			break;
+		case 'm':
+			lim->dryrun = 1;
 			break;
 		case 'n':
 			lim->nsexec = atoi(optarg);
