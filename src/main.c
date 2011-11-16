@@ -50,18 +50,21 @@ static void usage(const char *prog, const struct proc_limit *lim)
 	printf("\n");
 	printf("Usage: %s [options...]\n", prog);
 	printf("Options:\n");
-	printf("  --command=name,-c: Name of command to monitor.\n");
-	printf("  --limit=sec,-n:    Max execution time limit (%lu sec).\n", lim->nsexec);
-	printf("  --daemon,-b:       Fork to background running as daemon.\n");
-	printf("  --signal=num,-s:   Send signal to processes (%d).\n", lim->signal);
-	printf("  --interval=sec,-i: Poll interval (%d sec).\n", lim->interval);
-	printf("  --foreground,-f:   Don't detach from controlling terminal.\n");
-	printf("  --fuzzy,-z:        Enable fuzzy match of command name.\n");
-	printf("  --dry-run,-m:      Don't kill processes, only monitor and report.\n");
-	printf("  --debug,-d:        Enable debug.\n");
-	printf("  --verbose,-v:      Be more verbose.\n");
-	printf("  --help,-h:         This help.\n");
-	printf("  --version, -V:     Show version.\n");
+	printf("  -c,--command=name: Name of command to monitor.\n");
+	printf("  -n,--limit=sec:    Max execution time limit (%lu sec).\n", lim->nsexec);
+	printf("  -b,--daemon:       Fork to background running as daemon.\n");
+	printf("  -x,--script=path:  Execute script when signal process.\n");
+	printf("  -s,--signal=num:   Send signal to processes (%d).\n", lim->signal);
+	printf("  -i,--interval=sec: Poll interval (%d sec).\n", lim->interval);
+	printf("  -f,--foreground:   Don't detach from controlling terminal.\n");
+	printf("  -z,--fuzzy:        Enable fuzzy match of command name.\n");
+	printf("  -m,--dry-run:      Don't kill processes, only monitor and report.\n");
+	printf("  -d,--debug:        Enable debug.\n");
+	printf("  -v,--verbose:      Be more verbose.\n");
+	printf("  -h,--help:         This help.\n");
+	printf("  -V,--version:     Show version.\n");
+	printf("Hint:\n");
+	printf("  Use --signal=0 together with --script=path, see manual page for more info.\n");
 	printf("\n");
 	printf("Copyright (C) 2011 Anders Lövgren, Compdept at BMC, Uppsala University.\n");
 	printf("Report bugs to <%s>\n", PACKAGE_BUGREPORT);
@@ -109,6 +112,7 @@ static void parse_options(int argc, char **argv, const char *prog, struct proc_l
 		{ "signal", 1, NULL, 's'},
 		{ "verbose", 0, NULL, 'v'},
 		{ "version", 0, NULL, 'V'},
+		{ "script", 1, NULL, 'x' },
 		{ "fuzzy", 0, NULL, 'z'}
 	};
 	int c, index;
@@ -122,7 +126,7 @@ static void parse_options(int argc, char **argv, const char *prog, struct proc_l
 	lim->signal = PMON_DEFAULT_SIGNAL;
 	lim->ticks = sysconf(_SC_CLK_TCK);
 	
-	while ((c = getopt_long(argc, argv, "bc:dfhi:mn:s:vVz", lopts, &index)) != -1) {
+	while ((c = getopt_long(argc, argv, "bc:dfhi:mn:s:vVx:z", lopts, &index)) != -1) {
 		switch (c) {
 		case 'b':
 			lim->daemon = 1;
@@ -157,6 +161,9 @@ static void parse_options(int argc, char **argv, const char *prog, struct proc_l
 		case 'V':
 			version();
 			exit(0);
+		case 'x':
+			lim->script = optarg;
+			break;
 		case 'z':
 			lim->fuzzy = 1;
 			break;

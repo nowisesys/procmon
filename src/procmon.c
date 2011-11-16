@@ -27,6 +27,9 @@
 #endif
 
 #include <stdio.h>
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
 #ifdef HAVE_SYSLOG_H
 #include <syslog.h>
 #endif
@@ -74,6 +77,16 @@ static int pmon_time_get(unsigned long time, struct pmon_time *res)
 		return PMON_TIME_SHOW_MINUTES;
 	} else {
 		return PMON_TIME_SHOW_SECONDS;
+	}
+}
+
+static void pmon_run(const char *script, const struct proc_limit *lim, proc_t *pinf)
+{
+	char command[PATH_MAX];
+
+	snprintf(command, sizeof(command), "%s %d %s", script, pinf->tid, pinf->cmd);
+	if (system(command) < 0) {
+		error("Failed execute %s (%s)", command, strerror(errno));
 	}
 }
 
@@ -160,15 +173,21 @@ static int pmon_check(struct proc_limit *lim, proc_t *pinf)
 
 		notice("Process %d (%s) has exceeded CPU time limit %lu seconds (%lu sec).",
 			pinf->tid, pinf->cmd, lim->nsexec, lim->nscurr);
-		notice("Sending signal %d (%s) to process %d.",
-			lim->signal, strsignal(lim->signal), pinf->tid);
 		if (lim->dryrun) {
 			return 0; /* be done here! */
 		}
+		if (lim->script) {
+			pmon_run(lim->script, lim, pinf);
+		}
+		notice("Sending signal %d (%s) to process %d.",
+			lim->signal, strsignal(lim->signal), pinf->tid);
 		if (kill(pinf->tid, lim->signal) < 0) {
 			error("Failed send signal %d to process %d (%s)",
 				lim->signal, pinf->tid, strerror(errno));
 			return -1;
+		}
+		if (lim->signal == 0) {
+			return 0;
 		}
 		if (waitpid(pinf->tid, &status, 0) < 0) {
 			if (errno != ECHILD) {

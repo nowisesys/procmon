@@ -52,6 +52,7 @@ extern "C" {
                 unsigned long nscurr; /* current process cpu time */
                 int signal; /* send signal */
                 int daemon; /* daemonize */
+                const char *script; /* a script to run */
                 int fgmode; /* don't detach from controlling terminal */
                 int cmdline; /* use command line */
                 int interval; /* poll interval */

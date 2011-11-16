@@ -20,4 +20,11 @@
    Sending SIGKILL or SIGTERM will ask the daemon to exit. Sending SIGHUP
    will force the process to immediate begin a scanning of running processes.
 
+** SIGNAL & SCRIPT:
+
+   The default action is to send a signal (SIGTERM) to each process that exceeds
+   the given CPU-time limit. It is also possible to define a script to run in
+   addition to signaling. The script gets executed thru system(3) with PID and
+   command name as arguments.
+
 // Anders Lövgren, 2011-11-15
