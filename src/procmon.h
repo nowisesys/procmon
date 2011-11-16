@@ -36,6 +36,7 @@ extern "C" {
 #define PMON_TIMEOUT_INTERVAL 60        /* poll every minute by default */
 #define PMON_DEFAULT_SIGNAL   SIGTERM   /* default signal to send */
 #define PMON_DEFAULT_NSEXEC   3600      /* default number of CPU seconds */
+#define PMON_DEFAULT_PIDFILE "/var/run/procmond.pid"
 
         extern int done; /* daemon exit flag */
 
@@ -52,6 +53,8 @@ extern "C" {
                 unsigned long nscurr; /* current process cpu time */
                 int signal; /* send signal */
                 int daemon; /* daemonize */
+                char pidbuff[7]; /* buffer for daemon PID */
+                const char *pidfile; /* write (daemon) PID to this location */
                 const char *script; /* a script to run */
                 int fgmode; /* don't detach from controlling terminal */
                 int cmdline; /* use command line */

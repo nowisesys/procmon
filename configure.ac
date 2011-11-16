@@ -15,7 +15,7 @@ AC_PROG_LN_S
 AC_CHECK_LIB([proc],[readproc])
 
 # Checks for header files.
-AC_CHECK_HEADERS([proc/readproc.h stdlib.h string.h syslog.h])
+AC_CHECK_HEADERS([fcntl.h proc/readproc.h stdlib.h string.h syslog.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 

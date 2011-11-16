@@ -36,6 +36,15 @@
 #ifdef HAVE_SYSLOG_H
 #include <syslog.h>
 #endif
+#ifdef HAVE_SYS_TYPES_H
+#include <sys/types.h>
+#endif
+#ifdef HAVE_SYS_STAT_H
+#include <sys/stat.h>
+#endif
+#ifdef HAVE_FCNTL_H
+#include <fcntl.h>
+#endif
 #include <libgen.h>
 #include <getopt.h>
 #include <signal.h>
@@ -58,6 +67,7 @@ static void usage(const char *prog, const struct proc_limit *lim)
 	printf("  -i,--interval=sec: Poll interval (%d sec).\n", lim->interval);
 	printf("  -f,--foreground:   Don't detach from controlling terminal.\n");
 	printf("  -z,--fuzzy:        Enable fuzzy match of command name.\n");
+	printf("  -p,--pidfile=path: The PID file to write (%s).\n", lim->pidfile);
 	printf("  -m,--dry-run:      Don't kill processes, only monitor and report.\n");
 	printf("  -d,--debug:        Enable debug.\n");
 	printf("  -v,--verbose:      Be more verbose.\n");
@@ -110,6 +120,7 @@ static void parse_options(int argc, char **argv, const char *prog, struct proc_l
 		{ "dry-run", 0, NULL, 'm'},
 		{ "limit", 1, NULL, 'n'},
 		{ "signal", 1, NULL, 's'},
+		{ "pidfile", 1, NULL, 'p'},
 		{ "verbose", 0, NULL, 'v'},
 		{ "version", 0, NULL, 'V'},
 		{ "script", 1, NULL, 'x'},
@@ -124,9 +135,10 @@ static void parse_options(int argc, char **argv, const char *prog, struct proc_l
 	lim->nsexec = PMON_DEFAULT_NSEXEC;
 	lim->interval = PMON_TIMEOUT_INTERVAL;
 	lim->signal = PMON_DEFAULT_SIGNAL;
+	lim->pidfile = PMON_DEFAULT_PIDFILE;
 	lim->ticks = sysconf(_SC_CLK_TCK);
 
-	while ((c = getopt_long(argc, argv, "bc:dfhi:mn:s:vVx:z", lopts, &index)) != -1) {
+	while ((c = getopt_long(argc, argv, "bc:dfhi:mn:p:s:vVx:z", lopts, &index)) != -1) {
 		switch (c) {
 		case 'b':
 			lim->daemon = 1;
@@ -151,6 +163,9 @@ static void parse_options(int argc, char **argv, const char *prog, struct proc_l
 			break;
 		case 'n':
 			lim->nsexec = atoi(optarg);
+			break;
+		case 'p':
+			lim->pidfile = optarg;
 			break;
 		case 's':
 			lim->signal = atoi(optarg);
@@ -185,19 +200,12 @@ static void parse_options(int argc, char **argv, const char *prog, struct proc_l
 	}
 }
 
-int main(int argc, char** argv)
+static void pmon_run(struct proc_limit *lim)
 {
-	int res = 0;
-	struct proc_limit lim;
-	const char *prog = basename(argv[0]);
+	int res = 0, fd;
 
-	memset(&lim, 0, sizeof(struct proc_limit));
-	parse_options(argc, argv, prog, &lim);
-
-	pmon_dump(&lim);
-
-	if (lim.daemon) {
-		if (!lim.fgmode) {
+	if (lim->daemon) {
+		if (!lim->fgmode) {
 			if (daemon(0, 0) < 0) {
 				perror("daemon");
 				exit(1);
@@ -205,47 +213,76 @@ int main(int argc, char** argv)
 		} else {
 			printf("Running in interactive mode (undetached). Press Ctrl+C to exit.\n");
 		}
-		openlog(prog, LOG_PID, LOG_DAEMON);
-		sigfillset(&lim.sigset);
-		sigdelset(&lim.sigset, SIGKILL);
-		sigdelset(&lim.sigset, SIGTERM);
-		sigdelset(&lim.sigset, SIGINT);
-		sigdelset(&lim.sigset, SIGHUP);
-		sigprocmask(SIG_SETMASK, &lim.sigset, NULL);
+		openlog(lim->prog, LOG_PID, LOG_DAEMON);
+		snprintf(lim->pidbuff, sizeof(lim->pidbuff), "%d\n", getpid());
+		if ((fd = open(lim->pidfile, O_CREAT | O_EXCL | O_WRONLY, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)) < 0) {
+			error("Failed open %s (%s)", lim->pidfile, strerror(errno));
+			exit(1);
+		}
+		if (write(fd, lim->pidbuff, strlen(lim->pidbuff)) < 0) {
+			error("Failed write %s (%s)", lim->pidfile, strerror(errno));
+			exit(1);
+		} else {
+			close(fd);
+		}
+		sigfillset(&lim->sigset);
+		sigdelset(&lim->sigset, SIGKILL);
+		sigdelset(&lim->sigset, SIGTERM);
+		sigdelset(&lim->sigset, SIGINT);
+		sigdelset(&lim->sigset, SIGHUP);
+		sigprocmask(SIG_SETMASK, &lim->sigset, NULL);
 		signal(SIGKILL, sigterm);
 		signal(SIGTERM, sigterm);
 		signal(SIGINT, sigint);
 		signal(SIGHUP, sighup);
-		if (!lim.fgmode) {
-			syslog(LOG_INFO, "Daemon starting up... (%s)", PACKAGE_STRING);
+		if (!lim->fgmode) {
+			info("Daemon starting up... (%s)", PACKAGE_STRING);
 		}
 		while (!done) {
 			struct timeval tv;
-			tv.tv_sec = lim.interval;
+			tv.tv_sec = lim->interval;
 			tv.tv_usec = 0;
 			if (select(0, NULL, NULL, NULL, &tv) < 0) {
 				if (!done) { /* watchout for interupted syscall */
-					syslog(LOG_ERR, "Failed call select: %s", strerror(errno));
+					error("Calling select failed: %s", strerror(errno));
 					continue;
 				} else {
 					break;
 				}
 			}
-			if ((res = pmon_scan(&lim)) < 0) {
-				syslog(LOG_ERR, "Error in process scanner");
+			if ((res = pmon_scan(lim)) < 0) {
+				error("Error in process scanner");
 				done = 1;
 			}
 		}
-		if (!lim.fgmode) {
-			syslog(LOG_INFO, "Daemon exiting (%s)", PACKAGE_STRING);
+		if (!lim->fgmode) {
+			info("Daemon exiting (%s)", PACKAGE_STRING);
+		}
+		if (unlink(lim->pidfile) < 0) {
+			warn("Failed delete %s (%s)", lim->pidfile, strerror(errno));
 		}
 		closelog();
-		return res == 0 ? 0 : 1;
 	} else {
-		if (pmon_scan(&lim) < 0) {
-			return 1;
+		if (pmon_scan(lim) < 0) {
+			exit(1);
 		}
 	}
+
+	if (res < 0) {
+		exit(1);
+	}
+}
+
+int main(int argc, char** argv)
+{
+	struct proc_limit lim;
+	const char *prog = basename(argv[0]);
+
+	memset(&lim, 0, sizeof(struct proc_limit));
+	parse_options(argc, argv, prog, &lim);
+
+	pmon_dump(&lim);
+	pmon_run(&lim);
 
 	return 0;
 }

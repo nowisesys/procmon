@@ -4062,7 +4062,7 @@ fi
 done
 
 
-for ac_header in proc/readproc.h stdlib.h string.h syslog.h
+for ac_header in fcntl.h proc/readproc.h stdlib.h string.h syslog.h
 do :
   as_ac_Header=`$as_echo "ac_cv_header_$ac_header" | $as_tr_sh`
 ac_fn_c_check_header_mongrel "$LINENO" "$ac_header" "$as_ac_Header" "$ac_includes_default"
