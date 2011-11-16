@@ -2,6 +2,9 @@ Version 0.8.4 (yyyy-mm-dd):
 
     * Added standard --pidfile=path option. The file is opened exclusive.
 
+    * The process can now (permanent or temporary) drop privileges between
+      each process scanning by setting the UID and GID.
+
 Version 0.8.3 (2011-11-16):
 
     * Fixed an automake problem manifesting itself when installing from Gentoo

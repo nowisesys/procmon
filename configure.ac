@@ -28,5 +28,7 @@ AC_FUNC_ERROR_AT_LINE
 AC_CHECK_FUNCS([memset select strchr strerror strstr])
 
 AC_CONFIG_FILES([Makefile
-                 src/Makefile])
+                 src/Makefile
+                 src/procmon.1
+                 src/procmond.8])
 AC_OUTPUT
