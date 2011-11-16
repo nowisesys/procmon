@@ -39,6 +39,9 @@
 #ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
+#ifdef HAVE_LIBCAP
+#include <sys/capability.h>
+#endif
 #include <sys/wait.h>
 #include <errno.h>
 
@@ -78,6 +81,106 @@ static int pmon_time_get(unsigned long time, struct pmon_time *res)
 	} else {
 		return PMON_TIME_SHOW_SECONDS;
 	}
+}
+
+int pmon_secure(const struct proc_limit *lim, int operation)
+{
+	switch (operation) {
+	case PMON_SECURE_INIT:
+
+#ifdef HAVE_LIBCAP
+		if (lim->euid != lim->ruid || lim->egid != lim->rgid) {
+			cap_t caps;
+			cap_value_t cap_list[2];
+
+			if (lim->euid != lim->ruid) {
+				if (!CAP_IS_SUPPORTED(CAP_SETUID)) {
+					error("Set UID capability is unsupported");
+					return -1;
+				}
+				cap_list[0] = CAP_SETUID;
+			}
+			if (lim->egid != lim->rgid) {
+				if (!CAP_IS_SUPPORTED(CAP_SETGID)) {
+					error("Set GID capability is unsupported");
+					return -1;
+				}
+				cap_list[1] = CAP_SETGID;
+			}
+
+			if (!(caps = cap_get_proc())) {
+				error("Failed call cap_get_proc (%s)", strerror(errno));
+				return -1;
+			}
+			if (cap_set_flag(caps, CAP_EFFECTIVE, 2, cap_list, CAP_SET) < 0) {
+				error("Failed call cap_set_flag (%s)", strerror(errno));
+				return -1;
+			}
+			if (cap_set_proc(caps) < 0) {
+				error("Failed call cap_set_proc (%s)", strerror(errno));
+				return -1;
+			}
+			if (cap_free(caps) < 0) {
+				error("Failed call cap_free (%s)", strerror(errno));
+				return -1;
+			}
+		}
+#endif
+
+		if (lim->secure) {
+			if (setgid(lim->egid) < 0) {
+				error("Failed call setgid(%d) (%s)", lim->egid, strerror(errno));
+				return -1;
+			}
+			if (setuid(lim->euid) < 0) {
+				error("Failed call setuid(%d) (%s)", lim->euid, strerror(errno));
+				return -1;
+			}
+		} else {
+			if (setegid(lim->egid) < 0) {
+				error("Failed call setegid(%d) (%s)", lim->egid, strerror(errno));
+				return -1;
+			}
+			if (seteuid(lim->euid) < 0) {
+				error("Failed call seteuid(%d) (%s)", lim->euid, strerror(errno));
+				return -1;
+			}
+		}
+		debug(3, "Credentials (init): (uid=%d, gid=%d [effective]) (uid=%d, gid=%d [real])",
+			geteuid(), getegid(), getuid(), getgid());
+		break;
+	case PMON_SECURE_SCAN:
+	case PMON_SECURE_DONE:
+		if (!lim->secure) {
+			if (seteuid(lim->ruid) < 0) {
+				error("Failed call seteuid(%d) (%s)", lim->ruid, strerror(errno));
+				return -1;
+			}
+			if (setegid(lim->rgid) < 0) {
+				error("Failed call setegid(%d) (%s)", lim->rgid, strerror(errno));
+				return -1;
+			}
+			debug(3, "Credentials (scan): (uid=%d, gid=%d [effective]) (uid=%d, gid=%d [real])",
+				geteuid(), getegid(), getuid(), getgid());
+		}
+		break;
+	case PMON_SECURE_REST:
+		if (!lim->secure) {
+			if (setegid(lim->egid) < 0) {
+				error("Failed call setegid(%d) (%s)", lim->egid, strerror(errno));
+				return -1;
+			}
+			if (seteuid(lim->euid) < 0) {
+				error("Failed call seteuid(%d) (%s)", lim->euid, strerror(errno));
+				return -1;
+			}
+			debug(3, "Credentials (rest): (uid=%d, gid=%d [effective]) (uid=%d, gid=%d [real])",
+				geteuid(), getegid(), getuid(), getgid());
+		}
+		break;
+	}
+
+	return 0;
 }
 
 static void pmon_exec(const char *script, const struct proc_limit *lim, proc_t *pinf)
@@ -214,6 +317,10 @@ int pmon_scan(struct proc_limit *lim)
 		lim->flags |= PROC_FILLUSR | PROC_FILLGRP | PROC_FILLMEM;
 	}
 
+	if (pmon_secure(lim, PMON_SECURE_SCAN) < 0) {
+		exit(1);
+	}
+
 	if (!(ptab = openproc(lim->flags))) {
 		error("Failed call openproc (%s)", strerror(errno));
 		return -1;
@@ -225,6 +332,10 @@ int pmon_scan(struct proc_limit *lim)
 		}
 	}
 	closeproc(ptab);
+
+	if (pmon_secure(lim, PMON_SECURE_REST) < 0) {
+		exit(1);
+	}
 
 	return 0;
 }

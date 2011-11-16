@@ -38,6 +38,11 @@ extern "C" {
 #define PMON_DEFAULT_NSEXEC   3600      /* default number of CPU seconds */
 #define PMON_DEFAULT_PIDFILE "/var/run/procmond.pid"
 
+#define PMON_SECURE_INIT 1      /* set initial credentials */
+#define PMON_SECURE_SCAN 2      /* setup credentials for scanning */
+#define PMON_SECURE_REST 3      /* restore credentials after scanning */
+#define PMON_SECURE_DONE 4      /* restore credentials at exit */
+
         extern int done; /* daemon exit flag */
 
         /*
@@ -50,12 +55,17 @@ extern "C" {
                 const char *exename; /* executable (filter) */
                 const char *cmdname; /* executable (process) */
                 unsigned long nsexec; /* limit number of sec */
-                unsigned long nscurr; /* current process cpu time */
+                unsigned long nscurr; /* current process CPU time */
+                uid_t ruid; /* process real user ID */
+                gid_t rgid; /* process real group ID */
+                uid_t euid; /* process effective user ID */
+                gid_t egid; /* process effective group ID */
+                int secure; /* drop real user and group ID */
                 int signal; /* send signal */
                 int daemon; /* daemonize */
                 char pidbuff[7]; /* buffer for daemon PID */
                 const char *pidfile; /* write (daemon) PID to this location */
-                const char *script; /* a script to run */
+                const char *script; /* the script to run */
                 int fgmode; /* don't detach from controlling terminal */
                 int cmdline; /* use command line */
                 int interval; /* poll interval */
@@ -67,6 +77,11 @@ extern "C" {
                 sigset_t sigset; /* signal proc mask */
                 int dryrun; /* only monitor and report */
         };
+
+        /*
+         * Set process privileges for operation.
+         */
+        int pmon_secure(const struct proc_limit *lim, int operation);
 
         /*
          * Scan processes, killing runaway processes.

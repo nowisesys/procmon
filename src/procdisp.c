@@ -57,6 +57,9 @@ void pmon_dump(const struct proc_limit *lim)
 	debug(1, "          Script: %s\t[script]", lim->script);
 	debug(1, "Ticks per second: %d\t[ticks] (sysconf)", lim->ticks);
 	debug(1, "         Dry-run: %s\t[dryrun]", pmon_bool(lim->dryrun));
+	debug(1, "        PID file: %s\t[pidfile]", lim->pidfile);
+	debug(1, "         User ID: %d (%d)\t[euid (ruid)]", lim->euid, lim->ruid);
+	debug(1, "        Group ID: %d (%d)\t[egid (rgid)]", lim->egid, lim->rgid);
 }
 
 void pmon_disp(const struct proc_limit *lim, proc_t *pinf)

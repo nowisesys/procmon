@@ -45,6 +45,8 @@
 #ifdef HAVE_FCNTL_H
 #include <fcntl.h>
 #endif
+#include <grp.h>
+#include <pwd.h>
 #include <libgen.h>
 #include <getopt.h>
 #include <signal.h>
@@ -67,7 +69,12 @@ static void usage(const char *prog, const struct proc_limit *lim)
 	printf("  -i,--interval=sec: Poll interval (%d sec).\n", lim->interval);
 	printf("  -f,--foreground:   Don't detach from controlling terminal.\n");
 	printf("  -z,--fuzzy:        Enable fuzzy match of command name.\n");
-	printf("  -p,--pidfile=path: The PID file to write (%s).\n", lim->pidfile);
+	printf("  -p,--pidfile=path: Write PID to file (%s).\n", lim->pidfile);
+	printf("  -u,--user=name:    Set process user (by name).\n");
+	printf("  -U,--uid=num:      Set process user (by UID).\n");
+	printf("  -g,--group=name:   Set process group (by name).\n");
+	printf("  -G,--gid=num:      Set process group (by GID).\n");
+	printf("  -S,--secure:       Permanent drop credentials (real UID and GID).\n");
 	printf("  -m,--dry-run:      Don't kill processes, only monitor and report.\n");
 	printf("  -d,--debug:        Enable debug.\n");
 	printf("  -v,--verbose:      Be more verbose.\n");
@@ -115,12 +122,17 @@ static void parse_options(int argc, char **argv, const char *prog, struct proc_l
 		{ "command", 1, NULL, 'c'},
 		{ "debug", 0, NULL, 'd'},
 		{ "foreground", 0, NULL, 'f'},
+		{ "group", 1, NULL, 'g'},
+		{ "gid", 1, NULL, 'G'},
 		{ "help", 0, NULL, 'h'},
 		{ "interval", 1, NULL, 'i'},
 		{ "dry-run", 0, NULL, 'm'},
 		{ "limit", 1, NULL, 'n'},
 		{ "signal", 1, NULL, 's'},
+		{ "secure", 0, NULL, 'S'},
 		{ "pidfile", 1, NULL, 'p'},
+		{ "user", 1, NULL, 'u'},
+		{ "uid", 1, NULL, 'U'},
 		{ "verbose", 0, NULL, 'v'},
 		{ "version", 0, NULL, 'V'},
 		{ "script", 1, NULL, 'x'},
@@ -138,7 +150,10 @@ static void parse_options(int argc, char **argv, const char *prog, struct proc_l
 	lim->pidfile = PMON_DEFAULT_PIDFILE;
 	lim->ticks = sysconf(_SC_CLK_TCK);
 
-	while ((c = getopt_long(argc, argv, "bc:dfhi:mn:p:s:vVx:z", lopts, &index)) != -1) {
+	lim->euid = lim->ruid = getuid();
+	lim->egid = lim->rgid = getgid();
+
+	while ((c = getopt_long(argc, argv, "bc:dfg:G:hi:mn:p:s:Su:U:vVx:z", lopts, &index)) != -1) {
 		switch (c) {
 		case 'b':
 			lim->daemon = 1;
@@ -151,6 +166,21 @@ static void parse_options(int argc, char **argv, const char *prog, struct proc_l
 			break;
 		case 'f':
 			lim->fgmode = 1;
+			break;
+		case 'g':
+		{
+			struct group *gr;
+
+			if ((gr = getgrnam(optarg))) {
+				lim->egid = gr->gr_gid;
+			} else {
+				perror("getgrnam");
+				exit(1);
+			}
+		}
+			break;
+		case 'G':
+			lim->egid = atoi(optarg);
 			break;
 		case 'h':
 			usage(prog, lim);
@@ -169,6 +199,24 @@ static void parse_options(int argc, char **argv, const char *prog, struct proc_l
 			break;
 		case 's':
 			lim->signal = atoi(optarg);
+			break;
+		case 'S':
+			lim->secure = 1;
+			break;
+		case 'u':
+		{
+			struct passwd *pw;
+
+			if ((pw = getpwnam(optarg))) {
+				lim->euid = pw->pw_uid;
+			} else {
+				perror("getpwnam");
+				exit(1);
+			}
+		}
+			break;
+		case 'U':
+			lim->euid = atoi(optarg);
 			break;
 		case 'v':
 			lim->verbose++;
@@ -227,6 +275,16 @@ static void pmon_run(struct proc_limit *lim)
 			close(fd);
 		}
 
+#ifdef HAVE_CHOWN
+		if (lim->euid != lim->ruid || lim->egid != lim->rgid) {
+			if (chown(lim->pidfile, lim->euid, lim->egid) < 0) {
+				error("Failed chown uid=%d, gid=%d on %s (%s)",
+					lim->euid, lim->egid, lim->pidfile, strerror(errno));
+				exit(1);
+			}
+		}
+#endif
+
 		sigfillset(&lim->sigset);
 		sigdelset(&lim->sigset, SIGKILL);
 		sigdelset(&lim->sigset, SIGTERM);
@@ -238,6 +296,9 @@ static void pmon_run(struct proc_limit *lim)
 		signal(SIGINT, sigint);
 		signal(SIGHUP, sighup);
 
+		if (pmon_secure(lim, PMON_SECURE_INIT) < 0) {
+			exit(1);
+		}
 		if (!lim->fgmode) {
 			info("Daemon starting up... (%s)", PACKAGE_STRING);
 		}
@@ -262,6 +323,9 @@ static void pmon_run(struct proc_limit *lim)
 
 		if (!lim->fgmode) {
 			info("Daemon exiting (%s)", PACKAGE_STRING);
+		}
+		if (pmon_secure(lim, PMON_SECURE_DONE) < 0) {
+			exit(1);
 		}
 		if (unlink(lim->pidfile) < 0) {
 			warn("Failed delete %s (%s)", lim->pidfile, strerror(errno));

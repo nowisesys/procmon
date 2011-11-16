@@ -563,7 +563,7 @@ PACKAGE_TARNAME='procmon'
 PACKAGE_VERSION='0.8.3'
 PACKAGE_STRING='procmon 0.8.3'
 PACKAGE_BUGREPORT='anders.lovgren@bmc.uu.se'
-PACKAGE_URL=''
+PACKAGE_URL='http://it.bmc.uu.se/andlov/proj/procmon/'
 
 ac_unique_file="config.h.in"
 # Factoring default headers for most tests.
@@ -1334,6 +1334,7 @@ Use these variables to override the choices made by `configure' or to help
 it to find libraries and programs with nonstandard names/locations.
 
 Report bugs to <anders.lovgren@bmc.uu.se>.
+procmon home page: <http://it.bmc.uu.se/andlov/proj/procmon/>.
 _ACEOF
 ac_status=$?
 fi
@@ -2621,6 +2622,7 @@ am__tar='${AMTAR} chof - "$$tardir"'; am__untar='${AMTAR} xf -'
 
 
 
+
 ac_config_headers="$ac_config_headers config.h"
 
 
@@ -3663,6 +3665,51 @@ _ACEOF
 
 fi
 
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for cap_get_proc in -lcap" >&5
+$as_echo_n "checking for cap_get_proc in -lcap... " >&6; }
+if ${ac_cv_lib_cap_cap_get_proc+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lcap  $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char cap_get_proc ();
+int
+main ()
+{
+return cap_get_proc ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_cap_cap_get_proc=yes
+else
+  ac_cv_lib_cap_cap_get_proc=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_cap_cap_get_proc" >&5
+$as_echo "$ac_cv_lib_cap_cap_get_proc" >&6; }
+if test "x$ac_cv_lib_cap_cap_get_proc" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBCAP 1
+_ACEOF
+
+  LIBS="-lcap $LIBS"
+
+fi
+
 
 # Checks for header files.
 ac_ext=c
@@ -4077,8 +4124,103 @@ done
 
 
 # Checks for typedefs, structures, and compiler characteristics.
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for uid_t in sys/types.h" >&5
+$as_echo_n "checking for uid_t in sys/types.h... " >&6; }
+if ${ac_cv_type_uid_t+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+#include <sys/types.h>
+
+_ACEOF
+if (eval "$ac_cpp conftest.$ac_ext") 2>&5 |
+  $EGREP "uid_t" >/dev/null 2>&1; then :
+  ac_cv_type_uid_t=yes
+else
+  ac_cv_type_uid_t=no
+fi
+rm -f conftest*
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_type_uid_t" >&5
+$as_echo "$ac_cv_type_uid_t" >&6; }
+if test $ac_cv_type_uid_t = no; then
+
+$as_echo "#define uid_t int" >>confdefs.h
+
+
+$as_echo "#define gid_t int" >>confdefs.h
+
+fi
+
 
 # Checks for library functions.
+for ac_header in unistd.h
+do :
+  ac_fn_c_check_header_mongrel "$LINENO" "unistd.h" "ac_cv_header_unistd_h" "$ac_includes_default"
+if test "x$ac_cv_header_unistd_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_UNISTD_H 1
+_ACEOF
+
+fi
+
+done
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for working chown" >&5
+$as_echo_n "checking for working chown... " >&6; }
+if ${ac_cv_func_chown_works+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  if test "$cross_compiling" = yes; then :
+  ac_cv_func_chown_works=no
+else
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+$ac_includes_default
+#include <fcntl.h>
+
+int
+main ()
+{
+  char *f = "conftest.chown";
+  struct stat before, after;
+
+  if (creat (f, 0600) < 0)
+    return 1;
+  if (stat (f, &before) < 0)
+    return 1;
+  if (chown (f, (uid_t) -1, (gid_t) -1) == -1)
+    return 1;
+  if (stat (f, &after) < 0)
+    return 1;
+  return ! (before.st_uid == after.st_uid && before.st_gid == after.st_gid);
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_run "$LINENO"; then :
+  ac_cv_func_chown_works=yes
+else
+  ac_cv_func_chown_works=no
+fi
+rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext \
+  conftest.$ac_objext conftest.beam conftest.$ac_ext
+fi
+
+rm -f conftest.chown
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_func_chown_works" >&5
+$as_echo "$ac_cv_func_chown_works" >&6; }
+if test $ac_cv_func_chown_works = yes; then
+
+$as_echo "#define HAVE_CHOWN 1" >>confdefs.h
+
+fi
+
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for error_at_line" >&5
 $as_echo_n "checking for error_at_line... " >&6; }
 if ${ac_cv_lib_error_at_line+:} false; then :
@@ -4723,7 +4865,8 @@ $config_headers
 Configuration commands:
 $config_commands
 
-Report bugs to <anders.lovgren@bmc.uu.se>."
+Report bugs to <anders.lovgren@bmc.uu.se>.
+procmon home page: <http://it.bmc.uu.se/andlov/proj/procmon/>."
 
 _ACEOF
 cat >>$CONFIG_STATUS <<_ACEOF || ac_write_fail=1
