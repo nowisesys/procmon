@@ -1,0 +1,23 @@
+
+   PROCMON - RUNAWAY PROCESS MONITOR
+
+** GENERAL:
+
+   This application is used to scan the table of running processes and killing
+   those that has gone to lunch or exceeded the given CPU-time limit.
+
+   It is etiher runned periodical in single shot mode from crontab or command
+   line or forked into the background as a daemon process (using the -b option).
+
+** REQUIREMENTS:
+
+   The procps package must be installed, along with headers and libs to 
+   compile this application.
+
+** DAEMON:
+
+   The process can be controlled by sending signals when running as daemon.
+   Sending SIGKILL or SIGTERM will ask the daemon to exit. Sending SIGHUP
+   will force the process to immediate begin a scanning of running processes.
+
+// Anders Lövgren, 2011-11-15
