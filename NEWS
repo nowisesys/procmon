@@ -1,4 +1,4 @@
-Version 0.8.4 (yyyy-mm-dd):
+Version 0.8.4 (2011-11-16):
 
     * Added standard --pidfile=path option. The file is opened exclusive.
 
