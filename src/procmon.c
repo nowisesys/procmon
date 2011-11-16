@@ -80,7 +80,7 @@ static int pmon_time_get(unsigned long time, struct pmon_time *res)
 	}
 }
 
-static void pmon_run(const char *script, const struct proc_limit *lim, proc_t *pinf)
+static void pmon_exec(const char *script, const struct proc_limit *lim, proc_t *pinf)
 {
 	char command[PATH_MAX];
 
@@ -177,7 +177,7 @@ static int pmon_check(struct proc_limit *lim, proc_t *pinf)
 			return 0; /* be done here! */
 		}
 		if (lim->script) {
-			pmon_run(lim->script, lim, pinf);
+			pmon_exec(lim->script, lim, pinf);
 		}
 		notice("Sending signal %d (%s) to process %d.",
 			lim->signal, strsignal(lim->signal), pinf->tid);
