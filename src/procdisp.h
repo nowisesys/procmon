@@ -40,7 +40,9 @@ do { \
 	} else if((prio) == LOG_DEBUG) { \
 		printf("debug: " fmt " (%s:%d)\n" , ##args, __FILE__ , __LINE__ ); \
 	} else if((prio) == LOG_ERR) { \
-		fprintf(stderr , "%s: " fmt "\n" , (lim)->prog , ##args); \
+		fprintf(stderr , "%s: error: " fmt "\n" , (lim)->prog , ##args); \
+	} else if((prio) == LOG_WARNING) { \
+		fprintf(stderr , "%s: warning: " fmt "\n" , (lim)->prog , ##args); \
 	} else { \
 		printf("info: " fmt "\n" , ##args); \
 	} \
@@ -49,6 +51,7 @@ do { \
 #define   debug(level, fmt, args...) if(((lim)->debug) >= (level)) { logmsg(LOG_DEBUG , fmt , ##args); }
 #define   error(fmt, args...) logmsg(LOG_ERR ,   fmt , ##args)
 #define    info(fmt, args...) logmsg(LOG_INFO , fmt , ##args)
+#define    warn(fmt, args...) logmsg(LOG_WARNING , fmt , ##args)
 #define  notice(fmt, args...) logmsg(LOG_NOTICE , fmt , ##args)
 
         void pmon_dump(const struct proc_limit *lim);
