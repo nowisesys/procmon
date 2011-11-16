@@ -570,9 +570,9 @@ uninstall-man: uninstall-man1 uninstall-man8
 
 
 install-exec-hook:
-	$(MKDIR_P) $(DESTDIR)$(sbindir)
-	$(LN_S)	$(bindir)/program$(EXEEXT) \
-		$(DESTDIR)$(sbindir)/program$(EXEEXT)d
+	$(MKDIR_P) $(DESTDIR)$(sbindir) && \
+	$(LN_S)	$(bindir)/procmon \
+		$(DESTDIR)$(sbindir)/procmond
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

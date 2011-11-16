@@ -1,3 +1,10 @@
+Version 0.8.3 (2011-11-16):
+
+    * Fixed an automake problem manifesting itself when installing from Gentoo
+      portage. The symbolic link in /usr/sbin were named programd.
+
+    * The ebuild file is now bundled with the source code.
+
 Version 0.8.2 (2011-11-16):
 
     * Custom script can now be executed along with signaling the process.
