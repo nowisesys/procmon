@@ -1,3 +1,11 @@
+Version 0.8.2 (2011-11-16):
+
+    * Custom script can now be executed along with signaling the process.
+
+    * The application will function as a daemon process if started as procmond.
+
+    * Added procmon (1) and procmond (8) manual page.
+
 Version 0.8.1 (2011-11-16):
     
     * Added dry-run mode (-m).
