@@ -2,8 +2,8 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.68])
-AC_INIT([procmon], [0.8.0], [anders.lovgren@bmc.uu.se])
-AM_INIT_AUTOMAKE([procmon], [0.8.0])
+AC_INIT([procmon], [0.8.1], [anders.lovgren@bmc.uu.se])
+AM_INIT_AUTOMAKE([procmon], [0.8.1])
 AC_CONFIG_SRCDIR([config.h.in])
 AC_CONFIG_HEADERS([config.h])
 
