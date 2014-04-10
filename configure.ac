@@ -2,8 +2,8 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.68])
-AC_INIT([procmon], [0.8.4], [anders.lovgren@bmc.uu.se],[], [http://it.bmc.uu.se/andlov/proj/procmon/])
-AM_INIT_AUTOMAKE([procmon], [0.8.4])
+AC_INIT([procmon], [0.8.5], [anders.lovgren@bmc.uu.se],[], [http://it.bmc.uu.se/andlov/proj/procmon/])
+AM_INIT_AUTOMAKE([procmon], [0.8.5])
 
 AC_CONFIG_SRCDIR([config.h.in])
 AC_CONFIG_HEADERS([config.h])
@@ -13,7 +13,7 @@ AC_PROG_CC
 AC_PROG_LN_S
 
 # Checks for libraries.
-AC_CHECK_LIB([proc],[readproc])
+AC_SEARCH_LIBS([readproc],[proc procps])
 AC_CHECK_LIB([cap],[cap_get_proc])
 
 # Checks for header files.

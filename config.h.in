@@ -12,9 +12,6 @@
 /* Define to 1 if you have the `cap' library (-lcap). */
 #undef HAVE_LIBCAP
 
-/* Define to 1 if you have the `proc' library (-lproc). */
-#undef HAVE_LIBPROC
-
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
