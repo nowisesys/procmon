@@ -1,3 +1,7 @@
+Version 0.8.5 (2014-04-10):
+
+    * Maintenance release. Fixed autoconf search for readproc().
+
 Version 0.8.4 (2011-11-16):
 
     * Added standard --pidfile=path option. The file is opened exclusive.
