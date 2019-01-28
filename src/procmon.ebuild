@@ -10,8 +10,8 @@ EAPI=4
 inherit eutils
 
 DESCRIPTION="Process monitor and system health maintainer application"
-HOMEPAGE="http://it.bmc.uu.se/andlov/proj/procmon/"
-SRC_URI="http://it.bmc.uu.se/andlov/proj/procmon/stable/${P}.tar.gz"
+HOMEPAGE="https://nowise.se/oss/procmon/"
+SRC_URI="https://github.com/nowisesys/procmon/archive/release-${P}.tar.gz"
 LICENSE="GPL-3"
 
 SLOT="0"
