@@ -114,7 +114,8 @@ Report bugs to \fB@PACKAGE_BUGREPORT@\fR
 See project homepage: \fB@PACKAGE_URL@\fR
 
 .SH COPYRIGHT
-Copyright \(co 2011 Anders Lövgren, Compdept at BMC, Uppsala University.
+Copyright \(co 2011-2018 Anders Lövgren, BMC-IT, Uppsala University.
+Copyright \(co 2018-2019 Anders Lövgren, Nowise Systems
 
 .SH "SEE ALSO"
 .BR proc (2),

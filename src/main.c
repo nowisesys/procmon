@@ -1,5 +1,7 @@
 /* procmon - runaway process monitor
- * Copyright (C) 2011 Anders Lövgren, Compdept at BMC, Uppsala University
+ * 
+ * Copyright (C) 2011-2018 Anders Lövgren, BMC-IT, Uppsala University
+ * Copyright (C) 2018-2019 Anders Lövgren, Nowise Systems
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -83,7 +85,8 @@ static void usage(const char *prog, const struct proc_limit *lim)
 	printf("Hint:\n");
 	printf("  Use --signal=0 together with --script=path, see manual page for more info.\n");
 	printf("\n");
-	printf("Copyright (C) 2011 Anders Lövgren, Compdept at BMC, Uppsala University.\n");
+	printf("Copyright (C) 2011-2018 Anders Lövgren, BMC-IT, Uppsala University.\n");
+	printf("Copyright (C) 2018-2019 Anders Lövgren, Nowise Systems.\n");
 	printf("Report bugs to <%s>\n", PACKAGE_BUGREPORT);
 }
 
