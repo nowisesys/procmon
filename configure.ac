@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.68])
-AC_INIT([procmon], [0.8.5], [anders.lovgren@bmc.uu.se],[], [http://it.bmc.uu.se/andlov/proj/procmon/])
+AC_INIT([procmon], [0.8.5], [andlov@nowise.se],[], [https://nowise.se/oss/procmon/])
 AM_INIT_AUTOMAKE([procmon], [0.8.5])
 
 AC_CONFIG_SRCDIR([config.h.in])
