@@ -87,6 +87,7 @@ static void usage(const char *prog, const struct proc_limit *lim)
 	printf("\n");
 	printf("Copyright (C) 2011-2018 Anders Lövgren, BMC-IT, Uppsala University.\n");
 	printf("Copyright (C) 2018-2019 Anders Lövgren, Nowise Systems.\n");
+	printf("\n");
 	printf("Report bugs to <%s>\n", PACKAGE_BUGREPORT);
 }
 
